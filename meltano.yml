@@ -1,0 +1,55 @@
+version: 1
+send_anonymous_usage_stats: true
+project_id: 505d0715-0bf9-4dcb-a9b5-b89f1115ddab
+plugins:
+  extractors:
+  - name: tap-postgres
+    namespace: tap_postgres
+    pip_url: tap-postgres
+    executable: tap-postgres
+    capabilities:
+    - discover
+    - properties
+    - state
+    settings:
+    - name: dbname
+      env: TAP_PG_DATABASE
+    - name: host
+      env: TAP_PG_ADDRESS
+    - name: password
+      env: TAP_PG_PASSWORD
+    - name: port
+      env: TAP_PG_PORT
+    - name: user
+      env: TAP_PG_USERNAME
+    config:
+      default_replication_method: FULL_TABLE # LOG_BASED, INCREMENTAL, FULL_TABLE
+      include_schemas_in_destination_stream_name: true
+    select:
+    - palma-public-cnaes.id
+    - palma-public-cnaes.atividades
+    - palma-public-cnaes.descricao
+  loaders:
+  - name: target-postgres
+    variant: datamill-co
+    pip_url: singer-target-postgres
+    config:
+      postgres_schema: public
+    settings:
+    - name: dbname
+      env: PG_DATABASE
+    - name: host
+      env: PG_ADDRESS
+    - name: password
+      env: PG_PASSWORD
+    - name: port
+      env: PG_PORT
+    - name: user
+      env: PG_USERNAME
+schedules:
+- name: postgres-to-postgres
+  extractor: tap-postgres
+  loader: target-postgres
+  transform: skip
+  interval: '@monthly'
+  start_date: 2021-07-29 14:57:18.333567
